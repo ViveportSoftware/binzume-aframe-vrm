@@ -39,6 +39,57 @@ export class VRMBlendShapeUtil {
         this._updateBlendShape();
     }
 
+    public startRaiseHandJoyAnimation(): void {
+        if (this.animatedMorph) {
+            this.stopBlink();
+        }
+        this.animatedMorph = {
+            name: "JOY",
+            times: [0, 0.5, 1, 2, 4, 5, 5.5],
+            values: [0, 0.3, 1, 1, 1, 0.4, 0.3]
+        };
+        this._updateBlendShape();
+    }
+
+    public startStandingGreetingJoyAnimation(): void {
+        if (this.animatedMorph) {
+          this.stopBlink();
+        }
+        this.animatedMorph = {
+          name: "JOY",
+          times: [0, 1, 2, 2.5, 3, 5, 6.3],
+          values: [0, 0, 0.3, 0.8, 1, 0.4, 0.3]
+        };
+        this._updateBlendShape();
+    }
+
+    public stopJoyAnimation(): void {
+        this.animatedMorph = null;
+        this._updateBlendShape();
+    }
+
+    public startTalkingAnimation(): void {
+        if (this.animatedMorph) {
+          this.stopBlink();
+        }
+        const time1 = Math.random() * 0.5;
+        const time2 = Math.random() * 0.5 + 0.5;
+        const value2 = Math.min(Math.random() + 0.3, 1);
+        const value1 = Math.random() * value2;
+
+        this.animatedMorph = {
+          name: "O",
+          times: [0, time1, 0.5, time2, 1],
+          values: [0, value1, value2, 0.5, 0]
+        };
+        this._updateBlendShape();
+    }
+
+    public stopTalkingAnimation(): void {
+        this.animatedMorph = null;
+        this._updateBlendShape();
+    }
+
     public stopBlink(): void {
         this.animatedMorph = null;
         this._updateBlendShape();

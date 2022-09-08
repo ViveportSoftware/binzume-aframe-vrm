@@ -172,6 +172,21 @@ export class VRMAvatar {
     public startBlink(blinkInterval: number): void {
         this._blendShapeUtil.startBlink(blinkInterval);
     }
+    public startRaiseHandJoyAnimation(): void {
+        this._blendShapeUtil.startRaiseHandJoyAnimation();
+    }
+    public startStandingGreetingJoyAnimation(): void {
+        this._blendShapeUtil.startStandingGreetingJoyAnimation();
+    }
+    public stopJoyAnimation(): void {
+        this._blendShapeUtil.stopJoyAnimation();
+    }
+    public startTalkingAnimation(): void {
+        this._blendShapeUtil.startTalkingAnimation();
+    }
+    public stopTalkingAnimation(): void {
+        this._blendShapeUtil.stopTalkingAnimation();
+    }
     public stopBlink(): void {
         this._blendShapeUtil.stopBlink();
     }
