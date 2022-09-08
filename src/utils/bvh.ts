@@ -5,14 +5,53 @@ export class BVHLoaderWrapper {
         /** @ts-ignore */
         let { BVHLoader } = await import('https://threejs.org/examples/jsm/loaders/BVHLoader.js');
         return await new Promise((resolve, reject) => {
-            new BVHLoader().load(url, (result: any) => {
-                if (options.convertBone) {
-                    this.fixTrackName(result.clip, avatar);
-                }
-                result.clip.tracks = result.clip.tracks.filter((t: any) => !t.name.match(/position/) || t.name.match(avatar.bones.hips.name));
-                resolve(result.clip);
-            });
+            /**
+             * Viveport Note:
+             * Date: 2022/08/12
+             * Description:
+             *  The following is content of not doing cache-bvh
+             */
+            // new BVHLoader().load(url, result => {
+            //   if (options.convertBone) {
+            //     this.fixTrackName(result.clip, avatar);
+            //   }
+            //   const newClip = {
+            //     ...result.clip,
+            //     tracks: result.clip.tracks.filter(t => !t.name.match(/position/))
+            //   };
+            //   resolve(newClip);
+            // });
+            const cacheKey = url;
+            window.VRM_ANIMATIONS = window.VRM_ANIMATIONS || {};
+            if (!window.VRM_ANIMATIONS[cacheKey]) {
+                new BVHLoader().load(url, (result: any) => {
+                    window.VRM_ANIMATIONS[cacheKey] = result.clip.clone();
+                    resolve(this.fixTracks(result.clip, avatar, options));
+                });
+            } else {
+                resolve(this.fixTracks(window.VRM_ANIMATIONS[cacheKey].clone(), avatar, options));
+            }
         });
+    }
+
+    protected fixTracks(clip: THREE.AnimationClip, avatar: VRMAvatar, options): THREE.AnimationClip {
+        if (options.convertBone) {
+          this.fixTrackName(clip, avatar);
+        }
+        /**
+         * Viveport Note:
+         * Date: 2022/08/12
+         * Description:
+         *  Because there is only walking animation at present, the Y-axis should not be affected,
+         *  so remove the BVH position information of the walking animation
+         * TODO::
+         *  If we want to expand the positional actions that affect hips,
+         *  such as jumping or flying, we need to do additional processing for `newClip`
+         *  ex: `clip.tracks = clip.tracks.filter(t => !t.name.match(/position/) || t.name.match(avatar.bones.hips.name));`
+         */
+
+        clip.tracks = clip.tracks.filter(t => !t.name.match(/position/));
+        return clip;
     }
 
     protected convertBoneName(name: string): string {
