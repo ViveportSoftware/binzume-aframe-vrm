@@ -86,6 +86,51 @@
       };
       this._updateBlendShape();
     }
+    startRaiseHandJoyAnimation() {
+      if (this.animatedMorph) {
+        this.stopBlink();
+      }
+      this.animatedMorph = {
+        name: "JOY",
+        times: [0, 0.5, 1, 2, 4, 5, 5.5],
+        values: [0, 0.3, 1, 1, 1, 0.4, 0.3]
+      };
+      this._updateBlendShape();
+    }
+    startStandingGreetingJoyAnimation() {
+      if (this.animatedMorph) {
+        this.stopBlink();
+      }
+      this.animatedMorph = {
+        name: "JOY",
+        times: [0, 1, 2, 2.5, 3, 5, 6.3],
+        values: [0, 0, 0.3, 0.8, 1, 0.4, 0.3]
+      };
+      this._updateBlendShape();
+    }
+    stopJoyAnimation() {
+      this.animatedMorph = null;
+      this._updateBlendShape();
+    }
+    startTalkingAnimation() {
+      if (this.animatedMorph) {
+        this.stopBlink();
+      }
+      const time1 = Math.random() * 0.5;
+      const time2 = Math.random() * 0.5 + 0.5;
+      const value2 = Math.min(Math.random() + 0.3, 1);
+      const value1 = Math.random() * value2;
+      this.animatedMorph = {
+        name: "O",
+        times: [0, time1, 0.5, time2, 1],
+        values: [0, value1, value2, 0.5, 0]
+      };
+      this._updateBlendShape();
+    }
+    stopTalkingAnimation() {
+      this.animatedMorph = null;
+      this._updateBlendShape();
+    }
     stopBlink() {
       this.animatedMorph = null;
       this._updateBlendShape();
@@ -337,6 +382,21 @@
     }
     startBlink(blinkInterval) {
       this._blendShapeUtil.startBlink(blinkInterval);
+    }
+    startRaiseHandJoyAnimation() {
+      this._blendShapeUtil.startRaiseHandJoyAnimation();
+    }
+    startStandingGreetingJoyAnimation() {
+      this._blendShapeUtil.startStandingGreetingJoyAnimation();
+    }
+    stopJoyAnimation() {
+      this._blendShapeUtil.stopJoyAnimation();
+    }
+    startTalkingAnimation() {
+      this._blendShapeUtil.startTalkingAnimation();
+    }
+    stopTalkingAnimation() {
+      this._blendShapeUtil.stopTalkingAnimation();
     }
     stopBlink() {
       this._blendShapeUtil.stopBlink();
@@ -873,14 +933,24 @@
     async load(url, avatar, options) {
       let { BVHLoader } = await import("https://threejs.org/examples/jsm/loaders/BVHLoader.js");
       return await new Promise((resolve, reject) => {
-        new BVHLoader().load(url, (result) => {
-          if (options.convertBone) {
-            this.fixTrackName(result.clip, avatar);
-          }
-          result.clip.tracks = result.clip.tracks.filter((t) => !t.name.match(/position/) || t.name.match(avatar.bones.hips.name));
-          resolve(result.clip);
-        });
+        const cacheKey = url;
+        window.VRM_ANIMATIONS = window.VRM_ANIMATIONS || {};
+        if (!window.VRM_ANIMATIONS[cacheKey]) {
+          new BVHLoader().load(url, (result) => {
+            window.VRM_ANIMATIONS[cacheKey] = result.clip.clone();
+            resolve(this.fixTracks(result.clip, avatar, options));
+          });
+        } else {
+          resolve(this.fixTracks(window.VRM_ANIMATIONS[cacheKey].clone(), avatar, options));
+        }
       });
+    }
+    fixTracks(clip, avatar, options) {
+      if (options.convertBone) {
+        this.fixTrackName(clip, avatar);
+      }
+      clip.tracks = clip.tracks.filter((t) => !t.name.match(/position/));
+      return clip;
     }
     convertBoneName(name) {
       name = name.replace("Spin1", "Spin");
@@ -920,6 +990,300 @@
   };
 
   // src/aframe-vrm.js
+  var VRM_POSE_A = {
+    bones: [
+      {
+        name: "hips",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "leftUpperLeg",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "rightUpperLeg",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "leftLowerLeg",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "rightLowerLeg",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "leftFoot",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "rightFoot",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "spine",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "chest",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "neck",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "head",
+        q: [0.06085100730464933, -0.02202995606372791, 0, 0.9979037207796351]
+      },
+      {
+        name: "leftShoulder",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "rightShoulder",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "leftUpperArm",
+        q: [-0.0039010895844694173, -0.1543204839727681, 0.539642514262409, 0.8276206416752847]
+      },
+      {
+        name: "rightUpperArm",
+        q: [0.009326220145646762, 0.1736606185406724, -0.5211727795846239, 0.8355441011735436]
+      },
+      {
+        name: "leftLowerArm",
+        q: [0.056406304529277126, -0.017647952075557537, 0.005438403159162174, 0.9982370972709678]
+      },
+      {
+        name: "rightLowerArm",
+        q: [0.054974313124661875, 0.02083301559003829, 0.0050595917092329966, 0.9982575874440588]
+      },
+      {
+        name: "leftHand",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "rightHand",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "leftToes",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "rightToes",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "leftEye",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "rightEye",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "jaw",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "leftThumbProximal",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "leftThumbIntermediate",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "leftThumbDistal",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "leftIndexProximal",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "leftIndexIntermediate",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "leftIndexDistal",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "leftMiddleProximal",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "leftMiddleIntermediate",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "leftMiddleDistal",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "leftRingProximal",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "leftRingIntermediate",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "leftRingDistal",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "leftLittleProximal",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "leftLittleIntermediate",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "leftLittleDistal",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "rightThumbProximal",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "rightThumbIntermediate",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "rightThumbDistal",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "rightIndexProximal",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "rightIndexIntermediate",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "rightIndexDistal",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "rightMiddleProximal",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "rightMiddleIntermediate",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "rightMiddleDistal",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "rightRingProximal",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "rightRingIntermediate",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "rightRingDistal",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "rightLittleProximal",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "rightLittleIntermediate",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "rightLittleDistal",
+        q: [0, 0, 0, 1]
+      },
+      {
+        name: "upperChest",
+        q: [0, 0, 0, 1]
+      }
+    ],
+    blendShape: [
+      {
+        name: "NEUTRAL",
+        value: 0
+      },
+      {
+        name: "A",
+        value: 0
+      },
+      {
+        name: "I",
+        value: 0
+      },
+      {
+        name: "U",
+        value: 0
+      },
+      {
+        name: "E",
+        value: 0
+      },
+      {
+        name: "O",
+        value: 0
+      },
+      {
+        name: "BLINK",
+        value: 0
+      },
+      {
+        name: "JOY",
+        value: 0
+      },
+      {
+        name: "ANGRY",
+        value: 0
+      },
+      {
+        name: "SORROW",
+        value: 0
+      },
+      {
+        name: "FUN",
+        value: 0
+      },
+      {
+        name: "LOOKUP",
+        value: 0
+      },
+      {
+        name: "LOOKDOWN",
+        value: 0
+      },
+      {
+        name: "LOOKLEFT",
+        value: 0
+      },
+      {
+        name: "LOOKRIGHT",
+        value: 0
+      },
+      {
+        name: "BLINK_L",
+        value: 0
+      },
+      {
+        name: "BLINK_R",
+        value: 0
+      }
+    ]
+  };
   AFRAME.registerComponent("vrm", {
     schema: {
       src: { default: "" },
@@ -974,6 +1338,7 @@
         this.play();
         el.emit("model-loaded", { format: "vrm", model: avatar.model, avatar }, false);
       } catch (e) {
+        console.error("vrm model-error", e);
         el.emit("model-error", { format: "vrm", src: url, cause: e }, false);
       }
     },
@@ -1013,7 +1378,8 @@
       format: { default: "" },
       loop: { default: true },
       enableIK: { default: true },
-      convertBone: { default: true }
+      convertBone: { default: true },
+      defaultMotion: { default: "" }
     },
     init() {
       this.avatar = null;
@@ -1039,7 +1405,7 @@
     },
     async _loadClip(url) {
       this.stopAnimation();
-      this.avatar.restPose();
+      this.avatar.setPose(VRM_POSE_A);
       if (url === "") {
         return;
       }
@@ -1055,12 +1421,15 @@
     stopAnimation() {
       if (this.animation) {
         this.animation.stop();
-        this.avatar.mixer.uncacheClip(this.clip);
         this.avatar.removeModule("MMDIK");
         this.animation = null;
       }
     },
     playTestMotion() {
+      if (this.data.defaultMotion) {
+        this._loadClip(this.data.defaultMotion);
+        return;
+      }
       let q = (x, y, z) => new THREE.Quaternion().setFromEuler(new THREE.Euler(x * Math.PI / 180, y * Math.PI / 180, z * Math.PI / 180));
       let tracks = {
         leftUpperArm: {
@@ -1097,7 +1466,6 @@
       let loop = this.data.loop ? THREE.LoopRepeat : THREE.LoopOnce;
       this.stopAnimation();
       this.clip = clip;
-      this.avatar.mixer.setTime(0);
       this.animation = this.avatar.mixer.clipAction(clip).setLoop(loop).setEffectiveWeight(1).play();
       this.animation.clampWhenFinished = true;
     },

@@ -40,6 +40,35 @@ var VRMBlendShapeUtil = class {
       values: [0, 0, 1, 0]
     }, this._updateBlendShape());
   }
+  startRaiseHandJoyAnimation() {
+    this.animatedMorph && this.stopBlink(), this.animatedMorph = {
+      name: "JOY",
+      times: [0, 0.5, 1, 2, 4, 5, 5.5],
+      values: [0, 0.3, 1, 1, 1, 0.4, 0.3]
+    }, this._updateBlendShape();
+  }
+  startStandingGreetingJoyAnimation() {
+    this.animatedMorph && this.stopBlink(), this.animatedMorph = {
+      name: "JOY",
+      times: [0, 1, 2, 2.5, 3, 5, 6.3],
+      values: [0, 0, 0.3, 0.8, 1, 0.4, 0.3]
+    }, this._updateBlendShape();
+  }
+  stopJoyAnimation() {
+    this.animatedMorph = null, this._updateBlendShape();
+  }
+  startTalkingAnimation() {
+    this.animatedMorph && this.stopBlink();
+    let time1 = Math.random() * 0.5, time2 = Math.random() * 0.5 + 0.5, value2 = Math.min(Math.random() + 0.3, 1), value1 = Math.random() * value2;
+    this.animatedMorph = {
+      name: "O",
+      times: [0, time1, 0.5, time2, 1],
+      values: [0, value1, value2, 0.5, 0]
+    }, this._updateBlendShape();
+  }
+  stopTalkingAnimation() {
+    this.animatedMorph = null, this._updateBlendShape();
+  }
   stopBlink() {
     this.animatedMorph = null, this._updateBlendShape();
   }
@@ -205,6 +234,21 @@ var VRMLoader = class {
   }
   startBlink(blinkInterval) {
     this._blendShapeUtil.startBlink(blinkInterval);
+  }
+  startRaiseHandJoyAnimation() {
+    this._blendShapeUtil.startRaiseHandJoyAnimation();
+  }
+  startStandingGreetingJoyAnimation() {
+    this._blendShapeUtil.startStandingGreetingJoyAnimation();
+  }
+  stopJoyAnimation() {
+    this._blendShapeUtil.stopJoyAnimation();
+  }
+  startTalkingAnimation() {
+    this._blendShapeUtil.startTalkingAnimation();
+  }
+  stopTalkingAnimation() {
+    this._blendShapeUtil.stopTalkingAnimation();
   }
   stopBlink() {
     this._blendShapeUtil.stopBlink();
@@ -579,10 +623,14 @@ var BVHLoaderWrapper = class {
   async load(url, avatar, options) {
     let { BVHLoader } = await import("https://threejs.org/examples/jsm/loaders/BVHLoader.js");
     return await new Promise((resolve, reject) => {
-      new BVHLoader().load(url, (result) => {
-        options.convertBone && this.fixTrackName(result.clip, avatar), result.clip.tracks = result.clip.tracks.filter((t) => !t.name.match(/position/) || t.name.match(avatar.bones.hips.name)), resolve(result.clip);
+      let cacheKey = url;
+      window.VRM_ANIMATIONS = window.VRM_ANIMATIONS || {}, window.VRM_ANIMATIONS[cacheKey] ? resolve(this.fixTracks(window.VRM_ANIMATIONS[cacheKey].clone(), avatar, options)) : new BVHLoader().load(url, (result) => {
+        window.VRM_ANIMATIONS[cacheKey] = result.clip.clone(), resolve(this.fixTracks(result.clip, avatar, options));
       });
     });
+  }
+  fixTracks(clip, avatar, options) {
+    return options.convertBone && this.fixTrackName(clip, avatar), clip.tracks = clip.tracks.filter((t) => !t.name.match(/position/)), clip;
   }
   convertBoneName(name) {
     return name = name.replace("Spin1", "Spin"), name = name.replace("Chest1", "Chest"), name = name.replace("Chest2", "UpperChest"), name = name.replace("UpLeg", "UpperLeg"), name = name.replace("LeftLeg", "LeftLowerLeg"), name = name.replace("RightLeg", "RightLowerLeg"), name = name.replace("ForeArm", "UpperArm"), name = name.replace("LeftArm", "LeftLowerArm"), name = name.replace("RightArm", "RightLowerArm"), name = name.replace("Collar", "Shoulder"), name = name.replace("Elbow", "LowerArm"), name = name.replace("Wrist", "Hand"), name = name.replace("LeftHip", "LeftUpperLeg"), name = name.replace("RightHip", "RightUpperLeg"), name = name.replace("Knee", "LowerLeg"), name = name.replace("Ankle", "Foot"), name.charAt(0).toLowerCase() + name.slice(1);
@@ -598,6 +646,300 @@ var BVHLoaderWrapper = class {
 };
 
 // src/aframe-vrm.js
+var VRM_POSE_A = {
+  bones: [
+    {
+      name: "hips",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "leftUpperLeg",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "rightUpperLeg",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "leftLowerLeg",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "rightLowerLeg",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "leftFoot",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "rightFoot",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "spine",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "chest",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "neck",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "head",
+      q: [0.06085100730464933, -0.02202995606372791, 0, 0.9979037207796351]
+    },
+    {
+      name: "leftShoulder",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "rightShoulder",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "leftUpperArm",
+      q: [-0.0039010895844694173, -0.1543204839727681, 0.539642514262409, 0.8276206416752847]
+    },
+    {
+      name: "rightUpperArm",
+      q: [0.009326220145646762, 0.1736606185406724, -0.5211727795846239, 0.8355441011735436]
+    },
+    {
+      name: "leftLowerArm",
+      q: [0.056406304529277126, -0.017647952075557537, 0.005438403159162174, 0.9982370972709678]
+    },
+    {
+      name: "rightLowerArm",
+      q: [0.054974313124661875, 0.02083301559003829, 0.0050595917092329966, 0.9982575874440588]
+    },
+    {
+      name: "leftHand",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "rightHand",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "leftToes",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "rightToes",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "leftEye",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "rightEye",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "jaw",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "leftThumbProximal",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "leftThumbIntermediate",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "leftThumbDistal",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "leftIndexProximal",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "leftIndexIntermediate",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "leftIndexDistal",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "leftMiddleProximal",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "leftMiddleIntermediate",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "leftMiddleDistal",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "leftRingProximal",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "leftRingIntermediate",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "leftRingDistal",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "leftLittleProximal",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "leftLittleIntermediate",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "leftLittleDistal",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "rightThumbProximal",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "rightThumbIntermediate",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "rightThumbDistal",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "rightIndexProximal",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "rightIndexIntermediate",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "rightIndexDistal",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "rightMiddleProximal",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "rightMiddleIntermediate",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "rightMiddleDistal",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "rightRingProximal",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "rightRingIntermediate",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "rightRingDistal",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "rightLittleProximal",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "rightLittleIntermediate",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "rightLittleDistal",
+      q: [0, 0, 0, 1]
+    },
+    {
+      name: "upperChest",
+      q: [0, 0, 0, 1]
+    }
+  ],
+  blendShape: [
+    {
+      name: "NEUTRAL",
+      value: 0
+    },
+    {
+      name: "A",
+      value: 0
+    },
+    {
+      name: "I",
+      value: 0
+    },
+    {
+      name: "U",
+      value: 0
+    },
+    {
+      name: "E",
+      value: 0
+    },
+    {
+      name: "O",
+      value: 0
+    },
+    {
+      name: "BLINK",
+      value: 0
+    },
+    {
+      name: "JOY",
+      value: 0
+    },
+    {
+      name: "ANGRY",
+      value: 0
+    },
+    {
+      name: "SORROW",
+      value: 0
+    },
+    {
+      name: "FUN",
+      value: 0
+    },
+    {
+      name: "LOOKUP",
+      value: 0
+    },
+    {
+      name: "LOOKDOWN",
+      value: 0
+    },
+    {
+      name: "LOOKLEFT",
+      value: 0
+    },
+    {
+      name: "LOOKRIGHT",
+      value: 0
+    },
+    {
+      name: "BLINK_L",
+      value: 0
+    },
+    {
+      name: "BLINK_R",
+      value: 0
+    }
+  ]
+};
 AFRAME.registerComponent("vrm", {
   schema: {
     src: { default: "" },
@@ -636,7 +978,7 @@ AFRAME.registerComponent("vrm", {
         }
         this.avatar = avatar, el.setObject3D("avatar", avatar.model), this._updateAvatar(), this.play(), el.emit("model-loaded", { format: "vrm", model: avatar.model, avatar }, !1);
       } catch (e) {
-        el.emit("model-error", { format: "vrm", src: url, cause: e }, !1);
+        console.error("vrm model-error", e), el.emit("model-error", { format: "vrm", src: url, cause: e }, !1);
       }
   },
   _updateAvatar() {
@@ -660,7 +1002,8 @@ AFRAME.registerComponent("vrm-anim", {
     format: { default: "" },
     loop: { default: !0 },
     enableIK: { default: !0 },
-    convertBone: { default: !0 }
+    convertBone: { default: !0 },
+    defaultMotion: { default: "" }
   },
   init() {
     this.avatar = null, this.el.components.vrm && this.el.components.vrm.avatar && (this.avatar = this.el.components.vrm.avatar), this.onVrmLoaded = (ev) => {
@@ -671,15 +1014,19 @@ AFRAME.registerComponent("vrm-anim", {
     oldData.src != this.data.src && this.avatar && this._loadClip(this.data.src);
   },
   async _loadClip(url) {
-    if (this.stopAnimation(), this.avatar.restPose(), url === "")
+    if (this.stopAnimation(), this.avatar.setPose(VRM_POSE_A), url === "")
       return;
     let loop = this.data.loop ? THREE.LoopRepeat : THREE.LoopOnce, clip = await ((this.data.format || (url.toLowerCase().endsWith(".bvh") ? "bvh" : "")) == "bvh" ? new BVHLoaderWrapper() : new VMDLoaderWrapper()).load(url, this.avatar, this.data);
     !this.avatar || this.playClip(clip);
   },
   stopAnimation() {
-    this.animation && (this.animation.stop(), this.avatar.mixer.uncacheClip(this.clip), this.avatar.removeModule("MMDIK"), this.animation = null);
+    this.animation && (this.animation.stop(), this.avatar.removeModule("MMDIK"), this.animation = null);
   },
   playTestMotion() {
+    if (this.data.defaultMotion) {
+      this._loadClip(this.data.defaultMotion);
+      return;
+    }
     let q = (x, y, z) => new THREE.Quaternion().setFromEuler(new THREE.Euler(x * Math.PI / 180, y * Math.PI / 180, z * Math.PI / 180)), tracks = {
       leftUpperArm: {
         keys: [
@@ -712,7 +1059,7 @@ AFRAME.registerComponent("vrm-anim", {
   },
   playClip(clip) {
     let loop = this.data.loop ? THREE.LoopRepeat : THREE.LoopOnce;
-    this.stopAnimation(), this.clip = clip, this.avatar.mixer.setTime(0), this.animation = this.avatar.mixer.clipAction(clip).setLoop(loop).setEffectiveWeight(1).play(), this.animation.clampWhenFinished = !0;
+    this.stopAnimation(), this.clip = clip, this.animation = this.avatar.mixer.clipAction(clip).setLoop(loop).setEffectiveWeight(1).play(), this.animation.clampWhenFinished = !0;
   },
   remove() {
     this.el.removeEventListener("model-loaded", this.onVrmLoaded), this.stopAnimation(), this.avatar = null;
