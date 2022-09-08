@@ -59,6 +59,7 @@ AFRAME.registerComponent('vrm', {
             this.play();
             el.emit('model-loaded', { format: 'vrm', model: avatar.model, avatar: avatar }, false);
         } catch (e) {
+            console.error('vrm model-error', e);
             el.emit('model-error', { format: 'vrm', src: url, cause: e }, false);
         }
     },
