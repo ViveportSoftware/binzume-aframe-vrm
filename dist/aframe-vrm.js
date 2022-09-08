@@ -1,3 +1,5 @@
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
+
 (() => {
   var __create = Object.create;
   var __defProp = Object.defineProperty;
@@ -236,7 +238,7 @@
   // src/vrm/avatar.ts
   var VRMLoader = class {
     constructor(gltfLoader) {
-      this.gltfLoader = gltfLoader || new THREE.GLTFLoader(THREE.DefaultLoadingManager);
+      this.gltfLoader = gltfLoader || new GLTFLoader(THREE.DefaultLoadingManager);
     }
     async load(url, moduleSpecs = []) {
       return new Promise((resolve, reject) => {
@@ -765,8 +767,8 @@
       };
     }
     async load(url, vrm, options) {
-      let { MMDLoader } = await import("https://threejs.org/examples/jsm/loaders/MMDLoader.js");
-      let { CCDIKSolver } = await import("https://threejs.org/examples/jsm/animation/CCDIKSolver.js");
+      let { MMDLoader } = await import("three/examples/jsm/loaders/MMDLoader.js");
+      let { CCDIKSolver } = await import("three/examples/jsm/animation/CCDIKSolver.js");
       let loader = new MMDLoader();
       let nameMap = {};
       for (let m of this.boneMapping) {
@@ -931,7 +933,7 @@
   // src/utils/bvh.ts
   var BVHLoaderWrapper = class {
     async load(url, avatar, options) {
-      let { BVHLoader } = await import("https://threejs.org/examples/jsm/loaders/BVHLoader.js");
+      let { BVHLoader } = await import("three/examples/jsm/loaders/BVHLoader.js");
       return await new Promise((resolve, reject) => {
         const cacheKey = url;
         window.VRM_ANIMATIONS = window.VRM_ANIMATIONS || {};
