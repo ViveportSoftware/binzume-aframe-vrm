@@ -1,3 +1,5 @@
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+
 // src/vrm/lookat.ts
 var VRMLookAt = class {
   constructor(initCtx) {
@@ -133,7 +135,7 @@ var FirstPersonMeshUtil = class {
 // src/vrm/avatar.ts
 var VRMLoader = class {
   constructor(gltfLoader) {
-    this.gltfLoader = gltfLoader || new THREE.GLTFLoader(THREE.DefaultLoadingManager);
+    this.gltfLoader = gltfLoader || new GLTFLoader(THREE.DefaultLoadingManager);
   }
   async load(url, moduleSpecs = []) {
     return new Promise((resolve, reject) => {
@@ -508,7 +510,7 @@ var VMDLoaderWrapper = class {
     };
   }
   async load(url, vrm, options) {
-    let { MMDLoader } = await import("https://threejs.org/examples/jsm/loaders/MMDLoader.js"), { CCDIKSolver } = await import("https://threejs.org/examples/jsm/animation/CCDIKSolver.js"), loader = new MMDLoader(), nameMap = {};
+    let { MMDLoader } = await import("three/examples/jsm/loaders/MMDLoader.js"), { CCDIKSolver } = await import("three/examples/jsm/animation/CCDIKSolver.js"), loader = new MMDLoader(), nameMap = {};
     for (let m of this.boneMapping) {
       let boneObj = vrm.bones[m.bone];
       if (boneObj)
@@ -621,7 +623,7 @@ var VMDLoaderWrapper = class {
 // src/utils/bvh.ts
 var BVHLoaderWrapper = class {
   async load(url, avatar, options) {
-    let { BVHLoader } = await import("https://threejs.org/examples/jsm/loaders/BVHLoader.js");
+    let { BVHLoader } = await import("three/examples/jsm/loaders/BVHLoader.js");
     return await new Promise((resolve, reject) => {
       let cacheKey = url;
       window.VRM_ANIMATIONS = window.VRM_ANIMATIONS || {}, window.VRM_ANIMATIONS[cacheKey] ? resolve(this.fixTracks(window.VRM_ANIMATIONS[cacheKey].clone(), avatar, options)) : new BVHLoader().load(url, (result) => {
