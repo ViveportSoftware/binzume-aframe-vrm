@@ -49,8 +49,12 @@ export class BVHLoaderWrapper {
          *  such as jumping or flying, we need to do additional processing for `newClip`
          *  ex: `clip.tracks = clip.tracks.filter(t => !t.name.match(/position/) || t.name.match(avatar.bones.hips.name));`
          */
-
-        clip.tracks = clip.tracks.filter(t => !t.name.match(/position/));
+         console.log("%c aframe-vrm log: turn-off-clip-track-postion:", "color: #F05365", options.removeClipTracksPositionData);
+        if (options.removeClipTracksPositionData) {
+            clip.tracks = clip.tracks.filter(t => !t.name.match(/position/));
+        } else {
+            clip.tracks = clip.tracks.filter((t) => !t.name.match(/position/) || t.name.match(avatar.bones.hips.name))
+        }
         return clip;
     }
 
