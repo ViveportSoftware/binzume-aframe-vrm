@@ -38,22 +38,21 @@ export class BVHLoaderWrapper {
         if (options.convertBone) {
           this.fixTrackName(clip, avatar);
         }
-        /**
-         * Viveport Note:
-         * Date: 2022/08/12
-         * Description:
-         *  Because there is only walking animation at present, the Y-axis should not be affected,
-         *  so remove the BVH position information of the walking animation
-         * TODO::
-         *  If we want to expand the positional actions that affect hips,
-         *  such as jumping or flying, we need to do additional processing for `newClip`
-         *  ex: `clip.tracks = clip.tracks.filter(t => !t.name.match(/position/) || t.name.match(avatar.bones.hips.name));`
-         */
-         console.log("%c aframe-vrm log: turn-off-clip-track-postion:", "color: #F05365", options.removeClipTracksPositionData);
-        if (options.removeClipTracksPositionData) {
-            clip.tracks = clip.tracks.filter(t => !t.name.match(/position/));
-        } else {
+        if (options.originAnimation) {
             clip.tracks = clip.tracks.filter((t) => !t.name.match(/position/) || t.name.match(avatar.bones.hips.name))
+        } else {
+            /**
+             * Viveport Note:
+             * Date: 2022/08/12
+             * Description:
+             *  Because there is only walking animation at present, the Y-axis should not be affected,
+             *  so remove the BVH position information of the walking animation
+             * TODO::
+             *  If we want to expand the positional actions that affect hips,
+             *  such as jumping or flying, we need to do additional processing for `newClip`
+             *  ex: `clip.tracks = clip.tracks.filter(t => !t.name.match(/position/) || t.name.match(avatar.bones.hips.name));`
+             */
+            clip.tracks = clip.tracks.filter(t => !t.name.match(/position/));
         }
         return clip;
     }

@@ -1,5 +1,3 @@
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-
 (() => {
   var __create = Object.create;
   var __defProp = Object.defineProperty;
@@ -238,7 +236,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
   // src/vrm/avatar.ts
   var VRMLoader = class {
     constructor(gltfLoader) {
-      this.gltfLoader = gltfLoader || new GLTFLoader(THREE.DefaultLoadingManager);
+      this.gltfLoader = gltfLoader || new THREE.GLTFLoader(THREE.DefaultLoadingManager);
     }
     async load(url, moduleSpecs = []) {
       return new Promise((resolve, reject) => {
@@ -767,8 +765,8 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
       };
     }
     async load(url, vrm, options) {
-      let { MMDLoader } = await import("three/examples/jsm/loaders/MMDLoader.js");
-      let { CCDIKSolver } = await import("three/examples/jsm/animation/CCDIKSolver.js");
+      let { MMDLoader } = await import("https://threejs.org/examples/jsm/loaders/MMDLoader.js");
+      let { CCDIKSolver } = await import("https://threejs.org/examples/jsm/animation/CCDIKSolver.js");
       let loader = new MMDLoader();
       let nameMap = {};
       for (let m of this.boneMapping) {
@@ -933,7 +931,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
   // src/utils/bvh.ts
   var BVHLoaderWrapper = class {
     async load(url, avatar, options) {
-      let { BVHLoader } = await import("three/examples/jsm/loaders/BVHLoader.js");
+      let { BVHLoader } = await import("https://threejs.org/examples/jsm/loaders/BVHLoader.js");
       return await new Promise((resolve, reject) => {
         const cacheKey = url;
         window.VRM_ANIMATIONS = window.VRM_ANIMATIONS || {};
@@ -951,11 +949,10 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
       if (options.convertBone) {
         this.fixTrackName(clip, avatar);
       }
-      console.log("%c aframe-vrm log: turn-off-clip-track-postion:", "color: #F05365", options.removeClipTracksPositionData);
-      if (options.removeClipTracksPositionData) {
-        clip.tracks = clip.tracks.filter((t) => !t.name.match(/position/));
-      } else {
+      if (options.originAnimation) {
         clip.tracks = clip.tracks.filter((t) => !t.name.match(/position/) || t.name.match(avatar.bones.hips.name));
+      } else {
+        clip.tracks = clip.tracks.filter((t) => !t.name.match(/position/));
       }
       return clip;
     }
@@ -1387,7 +1384,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
       enableIK: { default: true },
       convertBone: { default: true },
       defaultMotion: { default: "" },
-      removeClipTracksPositionData: { default: true }
+      originAnimation: { default: true }
     },
     init() {
       this.avatar = null;

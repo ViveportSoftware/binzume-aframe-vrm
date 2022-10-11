@@ -1,5 +1,3 @@
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-
 // src/vrm/lookat.ts
 var VRMLookAt = class {
   constructor(initCtx) {
@@ -135,7 +133,7 @@ var FirstPersonMeshUtil = class {
 // src/vrm/avatar.ts
 var VRMLoader = class {
   constructor(gltfLoader) {
-    this.gltfLoader = gltfLoader || new GLTFLoader(THREE.DefaultLoadingManager);
+    this.gltfLoader = gltfLoader || new THREE.GLTFLoader(THREE.DefaultLoadingManager);
   }
   async load(url, moduleSpecs = []) {
     return new Promise((resolve, reject) => {
@@ -510,7 +508,7 @@ var VMDLoaderWrapper = class {
     };
   }
   async load(url, vrm, options) {
-    let { MMDLoader } = await import("three/examples/jsm/loaders/MMDLoader.js"), { CCDIKSolver } = await import("three/examples/jsm/animation/CCDIKSolver.js"), loader = new MMDLoader(), nameMap = {};
+    let { MMDLoader } = await import("https://threejs.org/examples/jsm/loaders/MMDLoader.js"), { CCDIKSolver } = await import("https://threejs.org/examples/jsm/animation/CCDIKSolver.js"), loader = new MMDLoader(), nameMap = {};
     for (let m of this.boneMapping) {
       let boneObj = vrm.bones[m.bone];
       if (boneObj)
@@ -623,7 +621,7 @@ var VMDLoaderWrapper = class {
 // src/utils/bvh.ts
 var BVHLoaderWrapper = class {
   async load(url, avatar, options) {
-    let { BVHLoader } = await import("three/examples/jsm/loaders/BVHLoader.js");
+    let { BVHLoader } = await import("https://threejs.org/examples/jsm/loaders/BVHLoader.js");
     return await new Promise((resolve, reject) => {
       let cacheKey = url;
       window.VRM_ANIMATIONS = window.VRM_ANIMATIONS || {}, window.VRM_ANIMATIONS[cacheKey] ? resolve(this.fixTracks(window.VRM_ANIMATIONS[cacheKey].clone(), avatar, options)) : new BVHLoader().load(url, (result) => {
@@ -632,7 +630,7 @@ var BVHLoaderWrapper = class {
     });
   }
   fixTracks(clip, avatar, options) {
-    return options.convertBone && this.fixTrackName(clip, avatar), console.log("%c aframe-vrm log: turn-off-clip-track-postion:", "color: #F05365", options.removeClipTracksPositionData), options.removeClipTracksPositionData ? clip.tracks = clip.tracks.filter((t) => !t.name.match(/position/)) : clip.tracks = clip.tracks.filter((t) => !t.name.match(/position/) || t.name.match(avatar.bones.hips.name)), clip;
+    return options.convertBone && this.fixTrackName(clip, avatar), options.originAnimation ? clip.tracks = clip.tracks.filter((t) => !t.name.match(/position/) || t.name.match(avatar.bones.hips.name)) : clip.tracks = clip.tracks.filter((t) => !t.name.match(/position/)), clip;
   }
   convertBoneName(name) {
     return name = name.replace("Spin1", "Spin"), name = name.replace("Chest1", "Chest"), name = name.replace("Chest2", "UpperChest"), name = name.replace("UpLeg", "UpperLeg"), name = name.replace("LeftLeg", "LeftLowerLeg"), name = name.replace("RightLeg", "RightLowerLeg"), name = name.replace("ForeArm", "UpperArm"), name = name.replace("LeftArm", "LeftLowerArm"), name = name.replace("RightArm", "RightLowerArm"), name = name.replace("Collar", "Shoulder"), name = name.replace("Elbow", "LowerArm"), name = name.replace("Wrist", "Hand"), name = name.replace("LeftHip", "LeftUpperLeg"), name = name.replace("RightHip", "RightUpperLeg"), name = name.replace("Knee", "LowerLeg"), name = name.replace("Ankle", "Foot"), name.charAt(0).toLowerCase() + name.slice(1);
@@ -1006,7 +1004,7 @@ AFRAME.registerComponent("vrm-anim", {
     enableIK: { default: !0 },
     convertBone: { default: !0 },
     defaultMotion: { default: "" },
-    removeClipTracksPositionData: { default: !0 }
+    originAnimation: { default: !0 }
   },
   init() {
     this.avatar = null, this.el.components.vrm && this.el.components.vrm.avatar && (this.avatar = this.el.components.vrm.avatar), this.onVrmLoaded = (ev) => {
