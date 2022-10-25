@@ -1,3 +1,5 @@
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+
 (() => {
   var __create = Object.create;
   var __defProp = Object.defineProperty;
@@ -191,7 +193,7 @@
   // src/vrm/avatar.ts
   var VRMLoader = class {
     constructor(gltfLoader) {
-      this.gltfLoader = gltfLoader || new THREE.GLTFLoader(THREE.DefaultLoadingManager);
+      this.gltfLoader = gltfLoader || new GLTFLoader(THREE.DefaultLoadingManager);
     }
     async load(url, moduleSpecs = []) {
       return new Promise((resolve, reject) => {
@@ -705,8 +707,8 @@
       };
     }
     async load(url, vrm, options) {
-      let { MMDLoader } = await import("https://threejs.org/examples/jsm/loaders/MMDLoader.js");
-      let { CCDIKSolver } = await import("https://threejs.org/examples/jsm/animation/CCDIKSolver.js");
+      let { MMDLoader } = await import("three/examples/jsm/loaders/MMDLoader.js");
+      let { CCDIKSolver } = await import("three/examples/jsm/animation/CCDIKSolver.js");
       let loader = new MMDLoader();
       let nameMap = {};
       for (let m of this.boneMapping) {
@@ -871,11 +873,11 @@
   // src/utils/bvh.ts
   var BVHLoaderWrapper = class {
     async load(url, avatar, options) {
-      let { BVHLoader } = await import("https://threejs.org/examples/jsm/loaders/BVHLoader.js");
+      let { BVHLoader } = await import("three/examples/jsm/loaders/BVHLoader.js");
       return await new Promise((resolve, reject) => {
         new BVHLoader().load(url, (result) => {
           if (options.convertBone) {
-            this.fixTrackName(result.clip, avatar);
+            this.fixTrackName(result.clip, avatar, result.skeleton.bones);
           }
           result.clip.tracks = result.clip.tracks.filter((t) => !t.name.match(/position/) || t.name.match(avatar.bones.hips.name));
           resolve(result.clip);
@@ -901,7 +903,16 @@
       name = name.replace("Ankle", "Foot");
       return name.charAt(0).toLowerCase() + name.slice(1);
     }
-    fixTrackName(clip, avatar) {
+    fixTrackName(clip, avatar, motionBones) {
+      var _a;
+      const _vec3 = new THREE.Vector3();
+      const motionHipsBone = motionBones.find((b) => b.name == "hips");
+      const motionUpperChestBone = motionBones.find((b) => b.name == "upperChest");
+      const motionHipsHeight = ((motionHipsBone == null ? void 0 : motionHipsBone.position.y) || 0) * 2.005;
+      const vrmHipsY = (_a = avatar.bones.hips) == null ? void 0 : _a.getWorldPosition(_vec3).y;
+      const vrmRootY = avatar.model.getWorldPosition(_vec3).y;
+      const vrmHipsHeight = Math.abs(vrmHipsY - vrmRootY);
+      const hipsPositionScale = motionHipsBone && motionUpperChestBone ? vrmHipsHeight / motionHipsHeight : 0.09;
       clip.tracks.forEach((t) => {
         t.name = t.name.replace(/bones\[(\w+)\]/, (m, name) => {
           let bone = avatar.bones[this.convertBoneName(name)];
@@ -912,7 +923,7 @@
           t.values = t.values.map((v, i) => i % 2 === 0 ? -v : v);
         }
         if (t.name.match(/position/)) {
-          t.values = t.values.map((v, i) => (i % 3 === 1 ? v : -v) * 0.09);
+          t.values = t.values.map((v, i) => (i % 3 === 1 ? v : -v) * hipsPositionScale);
         }
       });
       clip.tracks = clip.tracks.filter((t) => !t.name.match(/NODE_NOT_FOUND/));

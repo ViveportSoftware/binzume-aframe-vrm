@@ -1,3 +1,4 @@
+import { Bone } from 'three';
 import { VRMAvatar } from '../vrm/avatar';
 
 export class BVHLoaderWrapper {
@@ -7,7 +8,7 @@ export class BVHLoaderWrapper {
         return await new Promise((resolve, reject) => {
             new BVHLoader().load(url, (result: any) => {
                 if (options.convertBone) {
-                    this.fixTrackName(result.clip, avatar);
+                    this.fixTrackName(result.clip, avatar, result.skeleton.bones);
                 }
                 result.clip.tracks = result.clip.tracks.filter((t: any) => !t.name.match(/position/) || t.name.match(avatar.bones.hips.name));
                 resolve(result.clip);
@@ -35,7 +36,16 @@ export class BVHLoaderWrapper {
         return name.charAt(0).toLowerCase() + name.slice(1);
     }
 
-    protected fixTrackName(clip: THREE.AnimationClip, avatar: VRMAvatar): void {
+    protected fixTrackName(clip: THREE.AnimationClip, avatar: VRMAvatar, motionBones: Bone[]): void {
+        const _vec3 = new THREE.Vector3();
+        const motionHipsBone = motionBones.find(b => b.name == "hips");
+        const motionUpperChestBone = motionBones.find(b => b.name == "upperChest");
+        const motionHipsHeight = (motionHipsBone?.position.y || 0) * 2.005; // TODO: should try to figure out the root cause of the magic number 2.005
+        const vrmHipsY = avatar.bones.hips?.getWorldPosition(_vec3).y;
+        const vrmRootY = avatar.model.getWorldPosition(_vec3).y;
+        const vrmHipsHeight = Math.abs( vrmHipsY - vrmRootY );
+        const hipsPositionScale = (motionHipsBone && motionUpperChestBone) ? (vrmHipsHeight / motionHipsHeight) : 0.09;
+          
         clip.tracks.forEach(t => {
             // '.bones[Chest].quaternion'
             t.name = t.name.replace(/bones\[(\w+)\]/, (m, name) => {
@@ -47,7 +57,7 @@ export class BVHLoaderWrapper {
                 t.values = t.values.map((v, i) => i % 2 === 0 ? -v : v);
             }
             if (t.name.match(/position/)) {
-                t.values = t.values.map((v, i) => (i % 3 === 1 ? v : -v) * 0.09); // TODO
+                t.values = t.values.map((v, i) => (i % 3 === 1 ? v : -v) * hipsPositionScale);
             }
         });
         clip.tracks = clip.tracks.filter(t => !t.name.match(/NODE_NOT_FOUND/));
