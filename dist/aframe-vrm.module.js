@@ -626,23 +626,32 @@ var BVHLoaderWrapper = class {
     let { BVHLoader } = await import("three/examples/jsm/loaders/BVHLoader.js");
     return await new Promise((resolve, reject) => {
       let cacheKey = url;
-      window.VRM_ANIMATIONS = window.VRM_ANIMATIONS || {}, window.VRM_ANIMATIONS[cacheKey] ? resolve(this.fixTracks(window.VRM_ANIMATIONS[cacheKey].clone(), avatar, options)) : new BVHLoader().load(url, (result) => {
-        window.VRM_ANIMATIONS[cacheKey] = result.clip.clone(), resolve(this.fixTracks(result.clip, avatar, options));
-      });
+      if (window.VRM_ANIMATIONS = window.VRM_ANIMATIONS || {}, !window.VRM_ANIMATIONS[cacheKey])
+        new BVHLoader().load(url, (result) => {
+          window.VRM_ANIMATIONS[cacheKey] = { clip: result.clip.clone(), bones: result.skeleton.bones }, resolve(this.fixTracks(result.clip, avatar, result.skeleton.bones, options));
+        });
+      else {
+        let { clip, bones } = window.VRM_ANIMATIONS[cacheKey];
+        resolve(this.fixTracks(clip.clone(), avatar, bones, options));
+      }
     });
   }
-  fixTracks(clip, avatar, options) {
-    return options.convertBone && this.fixTrackName(clip, avatar), options.originAnimation ? clip.tracks = clip.tracks.filter((t) => !t.name.match(/position/) || t.name.match(avatar.bones.hips.name)) : clip.tracks = clip.tracks.filter((t) => !t.name.match(/position/)), clip;
+  fixTracks(clip, avatar, motionBones, options) {
+    return options.convertBone && this.fixTrackName(clip, avatar, motionBones), clip.tracks = this.isLegacyMotionSkeleton(motionBones) ? clip.tracks.filter((t) => !t.name.match(/position/)) : clip.tracks.filter((t) => !t.name.match(/position/) || t.name.match(avatar.bones.hips.name)), clip;
   }
   convertBoneName(name) {
     return name = name.replace("Spin1", "Spin"), name = name.replace("Chest1", "Chest"), name = name.replace("Chest2", "UpperChest"), name = name.replace("UpLeg", "UpperLeg"), name = name.replace("LeftLeg", "LeftLowerLeg"), name = name.replace("RightLeg", "RightLowerLeg"), name = name.replace("ForeArm", "UpperArm"), name = name.replace("LeftArm", "LeftLowerArm"), name = name.replace("RightArm", "RightLowerArm"), name = name.replace("Collar", "Shoulder"), name = name.replace("Elbow", "LowerArm"), name = name.replace("Wrist", "Hand"), name = name.replace("LeftHip", "LeftUpperLeg"), name = name.replace("RightHip", "RightUpperLeg"), name = name.replace("Knee", "LowerLeg"), name = name.replace("Ankle", "Foot"), name.charAt(0).toLowerCase() + name.slice(1);
   }
-  fixTrackName(clip, avatar) {
+  isLegacyMotionSkeleton(motionBones) {
+    return motionBones.filter((b) => b.name == "hips" || b.name == "upperChest").length != 2;
+  }
+  fixTrackName(clip, avatar, motionBones) {
+    let _vec3 = new THREE.Vector3(), motionHipsHeight = (motionBones.find((b) => b.name == "hips")?.position.y || 0) * 2.005, vrmHipsY = avatar.bones.hips?.getWorldPosition(_vec3).y, vrmRootY = avatar.model.getWorldPosition(_vec3).y, vrmHipsHeight = Math.abs(vrmHipsY - vrmRootY), hipsPositionScale = this.isLegacyMotionSkeleton(motionBones) ? 0.09 : vrmHipsHeight / motionHipsHeight;
     clip.tracks.forEach((t) => {
       t.name = t.name.replace(/bones\[(\w+)\]/, (m, name) => {
         let bone = avatar.bones[this.convertBoneName(name)];
         return "bones[" + (bone != null ? bone.name : "NODE_NOT_FOUND") + "]";
-      }), t.name = t.name.replace("ToeBase", "Foot"), t.name.match(/quaternion/) && (t.values = t.values.map((v, i) => i % 2 == 0 ? -v : v)), t.name.match(/position/) && (t.values = t.values.map((v, i) => (i % 3 == 1 ? v : -v) * 0.09));
+      }), t.name = t.name.replace("ToeBase", "Foot"), t.name.match(/quaternion/) && (t.values = t.values.map((v, i) => i % 2 == 0 ? -v : v)), t.name.match(/position/) && (t.values = t.values.map((v, i) => (i % 3 == 1 ? v : -v) * hipsPositionScale));
     }), clip.tracks = clip.tracks.filter((t) => !t.name.match(/NODE_NOT_FOUND/));
   }
 };
@@ -1005,8 +1014,7 @@ AFRAME.registerComponent("vrm-anim", {
     loop: { default: !0 },
     enableIK: { default: !0 },
     convertBone: { default: !0 },
-    defaultMotion: { default: "" },
-    originAnimation: { default: !0 }
+    defaultMotion: { default: "" }
   },
   init() {
     this.avatar = null, this.el.components.vrm && this.el.components.vrm.avatar && (this.avatar = this.el.components.vrm.avatar), this.onVrmLoaded = (ev) => {

@@ -398,8 +398,7 @@ AFRAME.registerComponent('vrm-anim', {
         loop: { default: true },
         enableIK: { default: true },
         convertBone: { default: true },
-        defaultMotion: { default: '' },
-        originAnimation: { default: true }
+        defaultMotion: { default: '' }
     },
     init() {
         /** @type {VRMAvatar} */

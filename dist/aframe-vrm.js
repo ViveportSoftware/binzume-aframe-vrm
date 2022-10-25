@@ -939,23 +939,20 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
         window.VRM_ANIMATIONS = window.VRM_ANIMATIONS || {};
         if (!window.VRM_ANIMATIONS[cacheKey]) {
           new BVHLoader().load(url, (result) => {
-            window.VRM_ANIMATIONS[cacheKey] = result.clip.clone();
-            resolve(this.fixTracks(result.clip, avatar, options));
+            window.VRM_ANIMATIONS[cacheKey] = { clip: result.clip.clone(), bones: result.skeleton.bones };
+            resolve(this.fixTracks(result.clip, avatar, result.skeleton.bones, options));
           });
         } else {
-          resolve(this.fixTracks(window.VRM_ANIMATIONS[cacheKey].clone(), avatar, options));
+          const { clip, bones } = window.VRM_ANIMATIONS[cacheKey];
+          resolve(this.fixTracks(clip.clone(), avatar, bones, options));
         }
       });
     }
-    fixTracks(clip, avatar, options) {
+    fixTracks(clip, avatar, motionBones, options) {
       if (options.convertBone) {
-        this.fixTrackName(clip, avatar);
+        this.fixTrackName(clip, avatar, motionBones);
       }
-      if (options.originAnimation) {
-        clip.tracks = clip.tracks.filter((t) => !t.name.match(/position/) || t.name.match(avatar.bones.hips.name));
-      } else {
-        clip.tracks = clip.tracks.filter((t) => !t.name.match(/position/));
-      }
+      clip.tracks = this.isLegacyMotionSkeleton(motionBones) ? clip.tracks.filter((t) => !t.name.match(/position/)) : clip.tracks.filter((t) => !t.name.match(/position/) || t.name.match(avatar.bones.hips.name));
       return clip;
     }
     convertBoneName(name) {
@@ -977,7 +974,17 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
       name = name.replace("Ankle", "Foot");
       return name.charAt(0).toLowerCase() + name.slice(1);
     }
-    fixTrackName(clip, avatar) {
+    isLegacyMotionSkeleton(motionBones) {
+      return motionBones.filter((b) => b.name == "hips" || b.name == "upperChest").length != 2;
+    }
+    fixTrackName(clip, avatar, motionBones) {
+      var _a, _b;
+      const _vec3 = new THREE.Vector3();
+      const motionHipsHeight = (((_a = motionBones.find((b) => b.name == "hips")) == null ? void 0 : _a.position.y) || 0) * 2.005;
+      const vrmHipsY = (_b = avatar.bones.hips) == null ? void 0 : _b.getWorldPosition(_vec3).y;
+      const vrmRootY = avatar.model.getWorldPosition(_vec3).y;
+      const vrmHipsHeight = Math.abs(vrmHipsY - vrmRootY);
+      const hipsPositionScale = !this.isLegacyMotionSkeleton(motionBones) ? vrmHipsHeight / motionHipsHeight : 0.09;
       clip.tracks.forEach((t) => {
         t.name = t.name.replace(/bones\[(\w+)\]/, (m, name) => {
           let bone = avatar.bones[this.convertBoneName(name)];
@@ -988,7 +995,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
           t.values = t.values.map((v, i) => i % 2 === 0 ? -v : v);
         }
         if (t.name.match(/position/)) {
-          t.values = t.values.map((v, i) => (i % 3 === 1 ? v : -v) * 0.09);
+          t.values = t.values.map((v, i) => (i % 3 === 1 ? v : -v) * hipsPositionScale);
         }
       });
       clip.tracks = clip.tracks.filter((t) => !t.name.match(/NODE_NOT_FOUND/));
@@ -1385,8 +1392,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
       loop: { default: true },
       enableIK: { default: true },
       convertBone: { default: true },
-      defaultMotion: { default: "" },
-      originAnimation: { default: true }
+      defaultMotion: { default: "" }
     },
     init() {
       this.avatar = null;
