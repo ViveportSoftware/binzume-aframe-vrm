@@ -2,8 +2,10 @@ import { Bone } from 'three';
 import { VRMAvatar } from '../vrm/avatar';
 
 export class BVHLoaderWrapper {
+    protected existsPreviousThumbName = false;
     public async load(url: string, avatar: VRMAvatar, options: any): Promise<THREE.AnimationClip> {
         /** @ts-ignore */
+        this.existsPreviousThumbName = avatar.bones.leftThumbIntermediate != null || avatar.bones.rightThumbIntermediate != null;
         let { BVHLoader } = await import('https://threejs.org/examples/jsm/loaders/BVHLoader.js');
         return await new Promise((resolve, reject) => {
             /**
@@ -64,6 +66,12 @@ export class BVHLoaderWrapper {
         name = name.replace('RightHip', 'RightUpperLeg');
         name = name.replace('Knee', 'LowerLeg');
         name = name.replace('Ankle', 'Foot');
+        if (this.existsPreviousThumbName) {
+            name = name.replace("leftThumbMetacarpal", "leftThumbProximal");
+            name = name.replace("leftThumbProximal", "leftThumbIntermediate");
+            name = name.replace("rightThumbMetacarpal", "rightThumbProximal");
+            name = name.replace("rightThumbProximal", "rightThumbIntermediate");
+        }        
         return name.charAt(0).toLowerCase() + name.slice(1);
     }
 

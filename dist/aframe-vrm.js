@@ -932,8 +932,12 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
   // src/utils/bvh.ts
   var BVHLoaderWrapper = class {
+    constructor() {
+      this.existsPreviousThumbName = false;
+    }
     async load(url, avatar, options) {
-      let { BVHLoader } = await import("three/examples/jsm/loaders/BVHLoader.js");
+      this.existsPreviousThumbName = avatar.bones.leftThumbIntermediate != null || avatar.bones.rightThumbIntermediate != null;
+      let { BVHLoader } = await import("https://threejs.org/examples/jsm/loaders/BVHLoader.js");
       return await new Promise((resolve, reject) => {
         const cacheKey = url;
         window.VRM_ANIMATIONS = window.VRM_ANIMATIONS || {};
@@ -972,6 +976,12 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
       name = name.replace("RightHip", "RightUpperLeg");
       name = name.replace("Knee", "LowerLeg");
       name = name.replace("Ankle", "Foot");
+      if (this.existsPreviousThumbName) {
+        name = name.replace("leftThumbMetacarpal", "leftThumbProximal");
+        name = name.replace("leftThumbProximal", "leftThumbIntermediate");
+        name = name.replace("rightThumbMetacarpal", "rightThumbProximal");
+        name = name.replace("rightThumbProximal", "rightThumbIntermediate");
+      }
       return name.charAt(0).toLowerCase() + name.slice(1);
     }
     isLegacyMotionSkeleton(motionBones) {

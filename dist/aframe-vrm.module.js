@@ -622,8 +622,12 @@ var VMDLoaderWrapper = class {
 
 // src/utils/bvh.ts
 var BVHLoaderWrapper = class {
+  constructor() {
+    this.existsPreviousThumbName = !1;
+  }
   async load(url, avatar, options) {
-    let { BVHLoader } = await import("three/examples/jsm/loaders/BVHLoader.js");
+    this.existsPreviousThumbName = avatar.bones.leftThumbIntermediate != null || avatar.bones.rightThumbIntermediate != null;
+    let { BVHLoader } = await import("https://threejs.org/examples/jsm/loaders/BVHLoader.js");
     return await new Promise((resolve, reject) => {
       let cacheKey = url;
       if (window.VRM_ANIMATIONS = window.VRM_ANIMATIONS || {}, !window.VRM_ANIMATIONS[cacheKey])
@@ -640,7 +644,7 @@ var BVHLoaderWrapper = class {
     return options.convertBone && this.fixTrackName(clip, avatar, motionBones), clip.tracks = this.isLegacyMotionSkeleton(motionBones) ? clip.tracks.filter((t) => !t.name.match(/position/)) : clip.tracks.filter((t) => !t.name.match(/position/) || t.name.match(avatar.bones.hips.name)), clip;
   }
   convertBoneName(name) {
-    return name = name.replace("Spin1", "Spin"), name = name.replace("Chest1", "Chest"), name = name.replace("Chest2", "UpperChest"), name = name.replace("UpLeg", "UpperLeg"), name = name.replace("LeftLeg", "LeftLowerLeg"), name = name.replace("RightLeg", "RightLowerLeg"), name = name.replace("ForeArm", "UpperArm"), name = name.replace("LeftArm", "LeftLowerArm"), name = name.replace("RightArm", "RightLowerArm"), name = name.replace("Collar", "Shoulder"), name = name.replace("Elbow", "LowerArm"), name = name.replace("Wrist", "Hand"), name = name.replace("LeftHip", "LeftUpperLeg"), name = name.replace("RightHip", "RightUpperLeg"), name = name.replace("Knee", "LowerLeg"), name = name.replace("Ankle", "Foot"), name.charAt(0).toLowerCase() + name.slice(1);
+    return name = name.replace("Spin1", "Spin"), name = name.replace("Chest1", "Chest"), name = name.replace("Chest2", "UpperChest"), name = name.replace("UpLeg", "UpperLeg"), name = name.replace("LeftLeg", "LeftLowerLeg"), name = name.replace("RightLeg", "RightLowerLeg"), name = name.replace("ForeArm", "UpperArm"), name = name.replace("LeftArm", "LeftLowerArm"), name = name.replace("RightArm", "RightLowerArm"), name = name.replace("Collar", "Shoulder"), name = name.replace("Elbow", "LowerArm"), name = name.replace("Wrist", "Hand"), name = name.replace("LeftHip", "LeftUpperLeg"), name = name.replace("RightHip", "RightUpperLeg"), name = name.replace("Knee", "LowerLeg"), name = name.replace("Ankle", "Foot"), this.existsPreviousThumbName && (name = name.replace("leftThumbMetacarpal", "leftThumbProximal"), name = name.replace("leftThumbProximal", "leftThumbIntermediate"), name = name.replace("rightThumbMetacarpal", "rightThumbProximal"), name = name.replace("rightThumbProximal", "rightThumbIntermediate")), name.charAt(0).toLowerCase() + name.slice(1);
   }
   isLegacyMotionSkeleton(motionBones) {
     return motionBones.filter((b) => b.name == "hips" || b.name == "upperChest").length != 2;
