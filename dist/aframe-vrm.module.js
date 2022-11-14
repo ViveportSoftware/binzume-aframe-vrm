@@ -627,7 +627,7 @@ var BVHLoaderWrapper = class {
   }
   async load(url, avatar, options) {
     this.existsPreviousThumbName = avatar.bones.leftThumbIntermediate != null || avatar.bones.rightThumbIntermediate != null;
-    let { BVHLoader } = await import("https://threejs.org/examples/jsm/loaders/BVHLoader.js");
+    let { BVHLoader } = await import("three/examples/jsm/loaders/BVHLoader.js");
     return await new Promise((resolve, reject) => {
       let cacheKey = url;
       if (window.VRM_ANIMATIONS = window.VRM_ANIMATIONS || {}, !window.VRM_ANIMATIONS[cacheKey])
