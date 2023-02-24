@@ -3,6 +3,12 @@ import { VRMAvatar } from '../vrm/avatar';
 
 export class BVHLoaderWrapper {
     protected existsPreviousThumbName = false;
+    protected legacyBoneMapping = {
+        leftThumbMetacarpal: 'leftThumbProximal',
+        leftThumbProximal: 'leftThumbIntermediate',
+        rightThumbMetacarpal: 'rightThumbProximal',
+        rightThumbProximal: 'rightThumbIntermediate'
+    };
     public async load(url: string, avatar: VRMAvatar, options: any): Promise<THREE.AnimationClip> {
         /** @ts-ignore */
         this.existsPreviousThumbName = avatar.bones.leftThumbIntermediate != null || avatar.bones.rightThumbIntermediate != null;
@@ -67,10 +73,13 @@ export class BVHLoaderWrapper {
         name = name.replace('Knee', 'LowerLeg');
         name = name.replace('Ankle', 'Foot');
         if (this.existsPreviousThumbName) {
-            name = name.replace("leftThumbMetacarpal", "leftThumbProximal");
-            name = name.replace("leftThumbProximal", "leftThumbIntermediate");
-            name = name.replace("rightThumbMetacarpal", "rightThumbProximal");
-            name = name.replace("rightThumbProximal", "rightThumbIntermediate");
+            const newName = this.legacyBoneMapping[name];
+            if (newName)
+                name = name.replace(name, newName);
+            // name = name.replace("leftThumbMetacarpal", "leftThumbProximal");
+            // name = name.replace("leftThumbProximal", "leftThumbIntermediate");
+            // name = name.replace("rightThumbMetacarpal", "rightThumbProximal");
+            // name = name.replace("rightThumbProximal", "rightThumbIntermediate");
         }        
         return name.charAt(0).toLowerCase() + name.slice(1);
     }

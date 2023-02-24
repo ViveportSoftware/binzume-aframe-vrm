@@ -934,6 +934,12 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
   var BVHLoaderWrapper = class {
     constructor() {
       this.existsPreviousThumbName = false;
+      this.legacyBoneMapping = {
+        leftThumbMetacarpal: "leftThumbProximal",
+        leftThumbProximal: "leftThumbIntermediate",
+        rightThumbMetacarpal: "rightThumbProximal",
+        rightThumbProximal: "rightThumbIntermediate"
+      };
     }
     async load(url, avatar, options) {
       this.existsPreviousThumbName = avatar.bones.leftThumbIntermediate != null || avatar.bones.rightThumbIntermediate != null;
@@ -977,10 +983,9 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
       name = name.replace("Knee", "LowerLeg");
       name = name.replace("Ankle", "Foot");
       if (this.existsPreviousThumbName) {
-        name = name.replace("leftThumbMetacarpal", "leftThumbProximal");
-        name = name.replace("leftThumbProximal", "leftThumbIntermediate");
-        name = name.replace("rightThumbMetacarpal", "rightThumbProximal");
-        name = name.replace("rightThumbProximal", "rightThumbIntermediate");
+        const newName = this.legacyBoneMapping[name];
+        if (newName)
+          name = name.replace(name, newName);
       }
       return name.charAt(0).toLowerCase() + name.slice(1);
     }
